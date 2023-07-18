@@ -30,11 +30,11 @@ class LinearClassifier(object):
     Outputs:
     A list containing the value of the loss function at each training iteration.
     """
-    num_train, dim = X.shape
+    num_train, dim = X.shape # num_train = N, dim = D
     num_classes = np.max(y) + 1 # assume y takes values 0...K-1 where K is number of classes
     if self.W is None:
       # lazily initialize W
-      self.W = 0.001 * np.random.randn(dim, num_classes)
+      self.W = 0.001 * np.random.randn(dim, num_classes) # W = (D, C)
 
     # Run stochastic gradient descent to optimize W
     loss_history = []
@@ -53,7 +53,11 @@ class LinearClassifier(object):
       # Hint: Use np.random.choice to generate indices. Sampling with         #
       # replacement is faster than sampling without replacement.              #
       #########################################################################
-      pass
+      
+      batch_indexes = np.random.choice(num_train, batch_size)
+      X_batch = X[batch_indexes, :]
+      y_batch = y[batch_indexes]
+
       #########################################################################
       #                       END OF YOUR CODE                                #
       #########################################################################
@@ -67,7 +71,9 @@ class LinearClassifier(object):
       # TODO:                                                                 #
       # Update the weights using the gradient and the learning rate.          #
       #########################################################################
-      pass
+      
+      self.W -= learning_rate * grad
+
       #########################################################################
       #                       END OF YOUR CODE                                #
       #########################################################################
@@ -96,7 +102,10 @@ class LinearClassifier(object):
     # TODO:                                                                   #
     # Implement this method. Store the predicted labels in y_pred.            #
     ###########################################################################
-    pass
+    
+    y_pred = np.dot(X, self.W) # (N, C)
+    y_pred = np.argmax(y_pred, axis=1) # (N, 1)
+
     ###########################################################################
     #                           END OF YOUR CODE                              #
     ###########################################################################
