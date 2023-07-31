@@ -262,7 +262,28 @@ class FullyConnectedNet(object):
         # self.bn_params[1] to the forward pass for the second batch normalization #
         # layer, etc.                                                              #
         ############################################################################
-        pass
+        
+        fc_caches = {}
+        bn_caches = {}
+        relu_caches = {}
+        dropout_caches = {}
+        
+        for i in range(1, self.num_layers):
+            fc_a, fc_caches[str(i)] = affine_forward(X, self.params['W'+str(i)], self.params['b'+str(i)])
+            
+            if self.use_batchnorm:
+                bn_a, bn_caches[str(i)] = batchnorm_forward(fc_a, self.params['gamma'+str(i)], self.params['beta'+str(i), self.bn_params[i-1]])
+                relu_a, relu_caches[str(i)] = relu_forward(bn_a)
+            else:
+                relu_a, relu_caches[str(i)] = relu_forward(fc_a)
+            
+            if self.use_dropout:
+                relu_a, dropout_caches[str(i)] = dropout_forward(relu_a, self.dropout_param)
+
+            X = relu_a.copy()
+        
+        scores, fc_caches[str(self.num_layers)] = affine_forward(X, self.params['W'+str(self.num_layers)], self.params['b'+str(self.num_layers)])
+
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -285,7 +306,33 @@ class FullyConnectedNet(object):
         # automated tests, make sure that your L2 regularization includes a factor #
         # of 0.5 to simplify the expression for the gradient.                      #
         ############################################################################
-        pass
+        
+        loss, dsoftmax = softmax_loss(scores, y)
+        loss += 0.5 * self.reg * (np.sum(np.square(self.params['W'+str(self.num_layers)])))
+
+        dx, dw, db = affine_backward(dsoftmax, fc_caches[str(self.num_layers)])
+        grads['W'+str(self.num_layers)] = dw + self.reg*self.params['W'+str(self.num_layers)]
+        grads['b'+str(self.num_layers)] = db
+
+        for i in range(self.num_layers-1, 0, -1):
+            if self.use_dropout:
+                dx = dropout_backward(dx, dropout_caches[str(i)])
+            
+            drelu = relu_backward(dx, relu_caches[str(i)])
+
+            if self.use_batchnorm:
+                dx_norm, dgamma, dbeta = batchnorm_backward(drelu, bn_caches[str(i)])
+                dx, dw, db = affine_backward(dx_norm, fc_caches[str(i)])
+                grads['gamma'+str(i)] = dgamma
+                grads['beta'+str(i)] = dbeta
+            else:
+                dx, dw, db = affine_backward(drelu, fc_caches[str(i)])
+            
+            grads['W'+str(i)] = dw + self.reg*self.params['W'+str(i)]
+            grads['b'+str(i)] = db
+
+            loss += 0.5 * self.reg * (np.sum(np.square(self.params['W'+str(i)]))) 
+
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
