@@ -272,7 +272,7 @@ class FullyConnectedNet(object):
             fc_a, fc_caches[str(i)] = affine_forward(X, self.params['W'+str(i)], self.params['b'+str(i)])
             
             if self.use_batchnorm:
-                bn_a, bn_caches[str(i)] = batchnorm_forward(fc_a, self.params['gamma'+str(i)], self.params['beta'+str(i), self.bn_params[i-1]])
+                bn_a, bn_caches[str(i)] = batchnorm_forward(fc_a, self.params['gamma'+str(i)], self.params['beta'+str(i)], self.bn_params[i-1])
                 relu_a, relu_caches[str(i)] = relu_forward(bn_a)
             else:
                 relu_a, relu_caches[str(i)] = relu_forward(fc_a)
