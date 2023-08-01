@@ -279,8 +279,17 @@ def batchnorm_backward_alt(dout, cache):
     # single statement; our implementation fits on a single 80-character line.#
     ###########################################################################
     
-    # 省略了
-    dx, dgamma, dbeta = batchnorm_backward(dout, cache)
+    # Get cached variables from foward pass.
+    N, D = dout.shape
+    x, sample_mean, sample_var, x_norm, gamma, beta, eps = cache
+
+
+    dbeta = np.sum(dout, axis=0)
+    dgamma = np.sum(dout * x_norm, axis=0)
+
+    dx =(1 / N) * gamma * 1/(np.sqrt(sample_var+eps)) * ((N * dout) 
+    - np.sum(dout, axis=0) - (x-sample_mean) * np.square(1.0/np.sqrt(sample_var+eps)) * np.sum(dout * (x-sample_mean), axis=0))
+
 
     ###########################################################################
     #                             END OF YOUR CODE                            #
