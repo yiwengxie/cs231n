@@ -48,7 +48,9 @@ class ThreeLayerConvNet(object):
         # hidden affine layer, and keys 'W3' and 'b3' for the weights and biases   #
         # of the output affine layer.                                              #
         ############################################################################
-        pass
+        
+        C, H, W = input_dim
+
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
