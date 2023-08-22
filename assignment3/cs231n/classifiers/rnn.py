@@ -137,7 +137,41 @@ class CaptioningRNN(object):
         # defined above to store loss and gradients; grads[k] should give the      #
         # gradients for self.params[k].                                            #
         ############################################################################
-        pass
+        
+        # Features to hidden state
+        init_hidden_state, cache_init = affine_forward(features, W_proj, b_proj)
+
+        # Embed
+        embeded_captions, cache_word_embedding = word_embedding_forward(captions_in, W_embed)
+
+        # RNN or LSTM
+        cell_type = self.cell_type
+        if cell_type == 'rnn':
+            outputs, cache = rnn_forward(embeded_captions, init_hidden_state, Wx, Wh, b)
+        elif cell_type == 'lstm':
+            outputs, cache = lstm_forward(embeded_captions, init_hidden_state, Wx, Wh, b)
+        
+        # Forward
+        scores, cache_scores = temporal_affine_forward(outputs, W_vocab, b_vocab)
+        loss, dsoftmax = temporal_softmax_loss(scores, captions_out, mask)
+
+        # Backward
+        dscores, dW_vocab, db_vocab = temporal_affine_backward(dsoftmax, cache_scores)
+        grads['W_vocab'], grads['b_vocab'] = dW_vocab, db_vocab
+
+        if cell_type == 'rnn':
+            dx, dh0, dWx, dWh, db = rnn_backward(dscores, cache)
+            grads['b'], grads['Wh'], grads['Wx'] = db, dWh, dWx
+        elif cell_type == 'lstm':
+            dx, dh0, dWx, dWh, db = lstm_backward(dscores, cache)
+            grads['b'], grads['Wh'], grads['Wx'] = db, dWh, dWx
+        
+        dW_embed = word_embedding_backward(dx, cache_word_embedding)
+        grads['W_embed'] = dW_embed
+
+        _, dW_proj, db_proj = affine_backward(dh0, cache_init)
+        grads['W_proj'], grads['b_proj'] = dW_proj, db_proj
+
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
